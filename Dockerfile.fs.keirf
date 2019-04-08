@@ -1,0 +1,24 @@
+FROM ubuntu:latest
+
+LABEL maintainer="jonni.rainisto@gmail.com"
+
+ENV PATH /opt/m68k-amigaos/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt -y install make git gcc g++ \
+    lhasa libgmp-dev libmpfr-dev libmpc-dev flex bison gettext texinfo ncurses-dev wget \
+    rsync python-dev
+
+RUN cd /root && git clone https://github.com/bebbo/amiga-gcc.git && \
+    cd /root/amiga-gcc && make update && make all PREFIX=/opt/m68k-amigaos -j4
+
+RUN git clone https://github.com/keirf/Disk-Utilities.git && cd Disk-Utilities && \
+    PREFIX=/usr/local make && make install
+
+RUN wget http://www.exe2adf.com/downloads/exe2adf-v03e-linux.tar.gz && tar -zxvf exe2adf-v03e-linux.tar.gz && \
+    cp exe2adf-linux64bit /usr/bin/exe2adf
+
+RUN git clone https://github.com/keirf/HxC_FF_File_Selector.git && \
+    cd HxC_FF_File_Selector/amiga && make
+
+CMD (cd /HxC_FF_File_Selector/amiga && cp AUTOBOOT* /output/)
