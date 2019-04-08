@@ -1,18 +1,21 @@
-FROM debian:stable
+FROM ubuntu:latest
 
 LABEL maintainer="jonni.rainisto@gmail.com"
 
 ENV PATH /opt/m68k-amigaos/bin:$PATH
 
-RUN apt-get update
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt -y install make git gcc g++ \
+    lhasa libgmp-dev libmpfr-dev libmpc-dev flex bison gettext texinfo ncurses-dev wget rsync
+
+RUN cd /root && git clone https://github.com/bebbo/amiga-gcc.git 
+RUN cd /root/amiga-gcc && make update && make all PREFIX=/opt/m68k-amigaos -j4 
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install git make nano vim gcc-arm-none-eabi \
     srecord stm32flash python-crcmod zip autoconf bison flex g++ gcc gettext gperf libgmp10 \
-    libgmpxx4ldbl libgmp-dev libmpc3 libmpc-dev libmpfr4 libmpfr-dev libncurses5-dev python-dev
+    libgmpxx4ldbl libgmp-dev libmpc3 libmpc-dev libmpfr-dev libncurses5-dev python-dev python-pip
 
-RUN cd /root && git clone https://github.com/bebbo/amigaos-cross-toolchain.git && \
-    cd /root/amigaos-cross-toolchain && ./toolchain-m68k --prefix=/opt/m68k-amigaos --threads=4 build
+RUN pip install intelhex
 
-RUN git clone https://github.com/keirf/FlashFloppy.git && cd FlashFloppy && make dist
+RUN git clone https://github.com/keirf/FlashFloppy.git && cd FlashFloppy && make dist #
 
 CMD (cd FlashFloppy && cp *.zip /output/)
